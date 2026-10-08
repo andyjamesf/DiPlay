@@ -318,7 +318,8 @@ class WifiP2pGroupManager(
         }
         synchronized(legacyChannelLock) {
             if (activeChannel != null) releaseLegacyChannelRestriction(activeChannel)
-            activeChannel?.close()
+            // Channel became Closeable in API 27; below that quitSafely() releases it.
+            if (Build.VERSION.SDK_INT >= 27) activeChannel?.close()
         }
         activeThread?.quitSafely()
     }
@@ -720,7 +721,17 @@ class WifiP2pGroupManager(
         val fiveGhzSupported = runCatching { wifi?.is5GHzBandSupported }.getOrNull()
         val wifiEnabled = runCatching { wifi?.isWifiEnabled }.getOrNull()
         val locationEnabled = runCatching {
-            appContext.getSystemService(LocationManager::class.java)?.isLocationEnabled
+            val locations = appContext.getSystemService(LocationManager::class.java)
+            if (Build.VERSION.SDK_INT >= 28) {
+                locations?.isLocationEnabled
+            } else {
+                // isLocationEnabled is API 28. isProviderEnabled reports the same
+                // master switch on older head units instead of an unusable null.
+                locations?.let {
+                    it.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                        it.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+                }
+            }
         }.getOrNull()
         val required = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.NEARBY_WIFI_DEVICES
             else Manifest.permission.ACCESS_FINE_LOCATION
@@ -827,7 +838,8 @@ class WifiP2pGroupManager(
         }
         synchronized(legacyChannelLock) {
             if (failedChannel != null) releaseLegacyChannelRestriction(failedChannel)
-            failedChannel?.close()
+            // Channel became Closeable in API 27; below that quitSafely() releases it.
+            if (Build.VERSION.SDK_INT >= 27) failedChannel?.close()
         }
         failedThread?.quitSafely()
     }

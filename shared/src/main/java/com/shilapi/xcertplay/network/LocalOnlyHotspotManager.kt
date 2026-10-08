@@ -2,7 +2,6 @@ package com.shilapi.xcertplay.network
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.MacAddress
 import android.net.wifi.SoftApConfiguration
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
@@ -443,12 +442,10 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
         val ssid = validateSsid(configuration.SSID)
         val security = mapWifiConfigurationSecurity(configuration)
         val passphrase = validatePassphrase(security, unquote(configuration.preSharedKey))
-        val bssid = configuration.BSSID?.let {
-            try {
-                MacAddress.fromString(it)
-            } catch (failure: IllegalArgumentException) {
-                throw IOException("LocalOnlyHotspot reported an invalid BSSID: $it", failure)
-            }
+        // MacAddress is API 28, and this legacy WifiConfiguration path also runs below it.
+        val bssidBytes = configuration.BSSID?.let {
+            parseBssidBytes(it)
+                ?: throw IOException("LocalOnlyHotspot reported an invalid BSSID: $it")
         }
         val channel = readWifiConfigurationChannel(configuration)
 
@@ -457,8 +454,8 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
             passphrase = passphrase,
             security = security,
             channel = channel,
-            bssid = bssid?.toString(),
-            bssidBytes = bssid?.toByteArray(),
+            bssid = bssidBytes?.toMacAddressString(),
+            bssidBytes = bssidBytes,
             bandLabel = readWifiConfigurationBandLabel(configuration, channel),
         )
     }
@@ -738,6 +735,18 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
             throw IOException("$source returned invalid channel: $channel")
         }
         return channel
+    }
+
+    /** Six colon-separated hex octets, the only form WifiConfiguration.BSSID reports. */
+    private fun parseBssidBytes(value: String): ByteArray? {
+        val parts = value.split(':')
+        if (parts.size != 6) return null
+        val bytes = ByteArray(6)
+        parts.forEachIndexed { index, part ->
+            if (part.length != 2) return null
+            bytes[index] = (part.toIntOrNull(16) ?: return null).toByte()
+        }
+        return bytes
     }
 
     private fun ByteArray.toMacAddressString(): String =

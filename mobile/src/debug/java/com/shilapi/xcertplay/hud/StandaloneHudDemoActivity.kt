@@ -85,6 +85,11 @@ class StandaloneHudDemoActivity : Activity() {
         check(Build.FINGERPRINT == "BYD-AUTO/IVI/IVI:13/TP1A.220624.014/eng.build20260722.221155:user/release-keys") {
             "This test is restricted to the inspected firmware"
         }
+        // That firmware is Android 13, so the API 28 signing metadata below is always
+        // present. State the floor so it holds independently of the fingerprint.
+        if (Build.VERSION.SDK_INT < 28) {
+            throw IllegalStateException("This test needs the API 28 package signing metadata")
+        }
         val info = packageManager.getPackageInfo(target.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
         check(info.longVersionCode == 10601004L) { "Different stock receiver version" }
         check(info.applicationInfo!!.flags and ApplicationInfo.FLAG_SYSTEM != 0)

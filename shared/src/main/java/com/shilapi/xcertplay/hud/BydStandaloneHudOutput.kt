@@ -48,6 +48,12 @@ internal class BydStandaloneHudOutput private constructor(context: Context) {
         fun diagnostics(context: Context): String = buildString {
             appendLine("standaloneHudAvailable=${available(context)} sdk=${Build.VERSION.SDK_INT}")
             appendLine("firmware=${Build.FINGERPRINT}")
+            // available() already requires API 28, so the signer and long version
+            // code below describe nothing on an older head unit.
+            if (Build.VERSION.SDK_INT < 28) {
+                appendLine("receiverMetadataUnavailable=below-api-28")
+                return@buildString
+            }
             runCatching {
                 val info = context.packageManager.getPackageInfo(TARGET.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
                 val receiver = context.packageManager.getReceiverInfo(TARGET, 0)
