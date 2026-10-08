@@ -307,6 +307,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CarProfileSeed.applyOnce(applicationContext)
         // Back on the home page finishes this activity while the session runs on, so the icon lands here.
         if (savedInstanceState == null && isLauncherIntent(intent) && CarPlayBackgroundSession.hasSession()) {
             openProjection(); finish(); return
@@ -4618,6 +4619,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                         }
                     }
                     appendLine()
+                    appendLine("--- Settings as saved now (a session may still be running on older ones) ---")
+                    appendLine(SettingsDiagnosticSnapshot.report(appContext))
+                    appendLine()
                     appendLine("--- Last display negotiation (timestamps distinguish it from current settings) ---")
                     appendLine(DisplayDiagnosticSnapshot.report(appContext))
                     appendLine()
@@ -4628,6 +4632,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                     appendLine()
                     appendLine("--- Recent own-app process exits (Android 11+) ---")
                     appendLine(ProcessExitDiagnostics.report(appContext))
+                    appendLine("Own shutdown record (works below Android 11): " +
+                        UncleanShutdownDiagnostics.report(appContext))
                     appendLine()
                     for (name in SessionLogFile.REPORT_NAMES) {
                         val file = File(appContext.filesDir, "logs/$name")

@@ -1,3 +1,4 @@
 <resources>
     <bool name="config_advanced_audio_channel_mapping">true</bool>
+    <bool name="config_car_profile_seed">true</bool>
 </resources>

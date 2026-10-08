@@ -155,7 +155,7 @@ object AirPlayPersistence {
 
     fun loadHevcEnabled(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_HEVC_ENABLED, true)
+            .getBoolean(KEY_HEVC_ENABLED, false)
 
     fun loadUiScalePercent(context: Context): Int = CarPlayUiScale.sanitize(
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -205,7 +205,7 @@ object AirPlayPersistence {
 
     fun loadAudioFocusEnabled(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_AUDIO_FOCUS_ENABLED, true)
+            .getBoolean(KEY_AUDIO_FOCUS_ENABLED, false)
 
     fun saveAudioFocusEnabled(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -431,7 +431,7 @@ object AirPlayPersistence {
 
     fun loadLocationReportingEnabled(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_LOCATION_REPORTING_ENABLED, true)
+            .getBoolean(KEY_LOCATION_REPORTING_ENABLED, false)
 
     fun saveLocationReportingEnabled(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -528,12 +528,12 @@ object AirPlayPersistence {
 
     fun loadMediaBufferMillis(context: Context): Int = com.shilapi.xcertplay.media.MediaAudioBuffer.sanitize(
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getInt(KEY_MEDIA_BUFFER_MS, 1000),
+            .getInt(KEY_MEDIA_BUFFER_MS, com.shilapi.xcertplay.media.MediaAudioBuffer.DEFAULT_MILLIS),
     )
 
     /** CarPlay's buffered music (Apple Music sends ahead over TCP); off by default, applies at reconnect. */
     fun loadMainBufferedAudio(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_MAIN_BUFFERED_AUDIO, true)
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_MAIN_BUFFERED_AUDIO, false)
 
     fun saveMainBufferedAudio(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_MAIN_BUFFERED_AUDIO, enabled).apply()
