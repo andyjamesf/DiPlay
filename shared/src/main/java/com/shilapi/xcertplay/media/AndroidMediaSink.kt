@@ -176,6 +176,16 @@ internal class AudioFocusCoordinator(
  * media and navigation guidance stay independently routable. Call [close]
  * when the session tears down.
  */
+/**
+ * Legacy stream ids that must never carry media, whatever the audio-channel setting says.
+ *
+ * STREAM_VOICE_CALL (0), STREAM_BLUETOOTH_SCO (6) and STREAM_DTMF (8), written out by value
+ * because STREAM_BLUETOOTH_SCO is hidden in the public SDK. SCO is a narrowband hands-free
+ * voice channel: 48 kHz stereo music written to it came out of a driver's head unit as noise
+ * loud enough to hurt.
+ */
+internal val MEDIA_UNSAFE_STREAMS = setOf(0, 6, 8)
+
 class AndroidMediaSink(
     surface: Surface? = null,
     private val videoWidth: Int = 1280,
@@ -1578,9 +1588,16 @@ private class AudioRenderer(
         )
     }
 
-    /** 0 uses usage-based routing; 1–20 attempt legacy stream types supported by the head unit. */
+    /**
+     * 0 uses usage-based routing; 1–20 attempt legacy stream types supported by the head unit.
+     *
+     * Media never goes to a narrowband voice stream, whatever the setting says. 48 kHz stereo
+     * written to BLUETOOTH_SCO came out of a driver's head unit as noise loud enough to hurt.
+     * The setting exists so an odd vehicle bus can be reached, not so media can be routed
+     * somewhere that damages hearing, so those values fall back to usage routing.
+     */
     private fun channelOverride(channel: AudioChannel): Int = when (channel) {
-        AudioChannel.MEDIA -> mediaChannel
+        AudioChannel.MEDIA -> mediaChannel.takeUnless { it in MEDIA_UNSAFE_STREAMS } ?: 0
         AudioChannel.NAVIGATION -> navigationChannel
         else -> 0
     }

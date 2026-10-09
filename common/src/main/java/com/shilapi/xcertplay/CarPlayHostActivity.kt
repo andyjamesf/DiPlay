@@ -567,7 +567,7 @@ class CarPlayHostActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Before anything else, so a run cut short still leaves its mark for the next one.
         UncleanShutdownDiagnostics.sessionStarted(applicationContext)
-        CarProfileSeed.applyOnce(applicationContext)
+        CarProfileSeed.enforce(applicationContext)
         NavigationWidgetUpdater.attach(applicationContext)
         CarPlayCallKeys.install(applicationContext)
         CenterMapOverlay.requestShow = ::showCenterMap
