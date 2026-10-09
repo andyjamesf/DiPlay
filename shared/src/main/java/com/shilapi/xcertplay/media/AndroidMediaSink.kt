@@ -558,16 +558,27 @@ class AndroidMediaSink(
             val active = communicationModeStream ?: return
             if (id != null && id != active) return
             communicationModeStream = null
-            // The report is built inside the try but sent outside it: reporting from in there
-            // would let a failing callback be caught as a failed restore.
-            val line = try {
+            // The write decides success; the read back is best effort and separate. A service that
+            // rejects the setter can reject the getter too, and neither a failed read nor a failing
+            // report may throw out of a restoration failure that used to be contained here.
+            val failure = try {
                 manager.mode = savedAudioMode
-                Log.i("xcertplay-usb", "audio mode restored to ${manager.mode}")
-                "Audio: mode restored requested=$savedAudioMode now=${manager.mode} stream=$active"
+                null
             } catch (error: RuntimeException) {
-                Log.w("xcertplay-usb", "could not restore audio mode $savedAudioMode", error)
-                "Audio: mode restore failed requested=$savedAudioMode now=${manager.mode}" +
-                    " error=${error.javaClass.simpleName}"
+                error
+            }
+            val now = try {
+                manager.mode.toString()
+            } catch (error: RuntimeException) {
+                "unknown"
+            }
+            val line = if (failure == null) {
+                Log.i("xcertplay-usb", "audio mode restored to $now")
+                "Audio: mode restored requested=$savedAudioMode now=$now stream=$active"
+            } else {
+                Log.w("xcertplay-usb", "could not restore audio mode $savedAudioMode", failure)
+                "Audio: mode restore failed requested=$savedAudioMode now=$now" +
+                    " error=${failure.javaClass.simpleName}"
             }
             runCatching { onAudioDiagnostic(line) }
         }
