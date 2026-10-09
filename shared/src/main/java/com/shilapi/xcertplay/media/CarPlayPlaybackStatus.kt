@@ -17,6 +17,22 @@ data class CarPlayNowPlaying(
 )
 
 /**
+ * A report line for a playback change.
+ *
+ * Without it, an absent audio stream cannot be told from nothing playing: the iPhone opens the
+ * media stream on demand, so a session with only the data and screen streams looks the same
+ * whether the driver pressed play and heard silence or never pressed play at all.
+ *
+ * Carries no song or artist text. [sourceApp] is kept because it decides whether buffered music
+ * applies at all, and because it is an app identifier rather than anything about a person.
+ */
+fun CarPlayNowPlaying.diagnosticLine(): String = "Playback: playing=$playing" +
+    " sourceApp=${sourceApp?.takeIf { it.isNotEmpty() } ?: "unknown"}" +
+    " titlePresent=${!title.isNullOrEmpty()}" +
+    " durationMs=${durationMillis ?: -1}" +
+    " elapsedMs=${elapsedMillis ?: -1}"
+
+/**
  * Retains NowPlayingUpdate (0x5001) fields requested by [Iap2ControlMessages]. Updates carry only
  * what changed, so an omitted field preserves its previous value while a present empty string
  * clears it.

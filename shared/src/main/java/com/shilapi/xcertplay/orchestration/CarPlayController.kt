@@ -21,6 +21,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import com.shilapi.xcertplay.media.diagnosticLine
 import com.shilapi.xcertplay.airplay.AirPlayListenerIdentity
 import com.shilapi.xcertplay.airplay.AirPlayTcpAccepted
 import com.shilapi.xcertplay.airplay.AirPlayConfig
@@ -747,7 +748,10 @@ class CarPlayController(
             playbackStatus.acceptUpdate(frame)?.let { it to (it.playing != previousPlaying) }
         }?.let { (update, playingChanged) ->
             nowPlayingListener?.invoke(update)
-            if (playingChanged) playbackListener?.invoke(update.playing)
+            if (playingChanged) {
+                debugLog(update.diagnosticLine())
+                playbackListener?.invoke(update.playing)
+            }
         }
     }
 
